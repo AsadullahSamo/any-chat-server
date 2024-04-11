@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
 import express from "express";
+import https from 'https';
 import cors from "cors";
 import User from "./Models/userModel.js";
 import fetch from 'node-fetch';
@@ -9,12 +10,13 @@ import { URL } from 'url';
 import {Server} from 'socket.io'
 
 
-
 // Database operations
 import mongoose from 'mongoose'
 const app = express();
 app.use(express.json());       
 app.use(cors());
+
+const server = https.createServer(app);
 
 mongoose.connect(`${process.env.CON_STR}`)
 .then((con) => { 
@@ -33,13 +35,7 @@ const createUser = async (userObj) => {
     }
 }
 
-const io = new Server(3000, {
-    cors: { 
-        origin: ["http://localhost:8080", "https://any-chat-server.vercel.app", "https://any-chat-client.onrender.com"],
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-});
+const io = new Server(server);
 
 const connectedUsers = new Map()
 
