@@ -33,13 +33,14 @@ const createUser = async (userObj) => {
     }
 }
 
-const io = new Server({ /* no port specified */ }, {
+const io = new Server("https://any-chat-server.onrender.com", {
     cors: { 
         origin: ["http://localhost:8080", "https://any-chat-server.vercel.app", "https://any-chat-client.onrender.com"],
         methods: ["GET", "POST"],
         credentials: true
     }
 });
+
 const connectedUsers = new Map()
 
 io.on("connection", socket => {    
