@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
 import express from "express";
-import https from 'https';
+import {createServer} from 'http';
 import cors from "cors";
 import User from "./Models/userModel.js";
 import fetch from 'node-fetch';
@@ -16,14 +16,21 @@ const app = express();
 app.use(express.json());       
 app.use(cors());
 
-const server = https.createServer(app);
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: { 
+        origin: ["http://localhost:8080", "https://any-chat-server.vercel.app", "https://any-chat-client.onrender.com"],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
 
 mongoose.connect(`${process.env.CON_STR}`)
 .then((con) => { 
     console.log("Connected to MongoDB")
     const PORT = 8000;
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+    httpServer.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
     });
 }).catch(err => console.log("Error connecting to MongoDB", err.message));
 
@@ -35,7 +42,7 @@ const createUser = async (userObj) => {
     }
 }
 
-const io = new Server(server);
+
 
 const connectedUsers = new Map()
 
