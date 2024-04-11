@@ -14,14 +14,7 @@ import {Server} from 'socket.io'
 import mongoose from 'mongoose'
 const app = express();
 app.use(express.json());       
-app.use(cors(
-    {
-        origin: ["http://localhost:8080", "https://any-chat-server.vercel.app"],
-        methods: ["GET", "POST"],
-        credentials: true
-        
-    }
-));
+app.use(cors());
 
 mongoose.connect(`${process.env.CON_STR}`)
 .then((con) => { 
@@ -40,9 +33,9 @@ const createUser = async (userObj) => {
     }
 }
 
-const io = new Server(3000, {
+const io = new Server({ /* no port specified */ }, {
     cors: { 
-        origin: ["http://localhost:8080", "https://any-chat-server.vercel.app"],
+        origin: ["http://localhost:8080", "https://any-chat-server.vercel.app", "https://any-chat-client.onrender.com"],
         methods: ["GET", "POST"],
         credentials: true
     }
