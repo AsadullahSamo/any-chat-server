@@ -33,7 +33,7 @@ const createUser = async (userObj) => {
     }
 }
 
-const io = new Server("https://any-chat-server.onrender.com", {
+const io = new Server(3000, {
     cors: { 
         origin: ["http://localhost:8080", "https://any-chat-server.vercel.app", "https://any-chat-client.onrender.com"],
         methods: ["GET", "POST"],
