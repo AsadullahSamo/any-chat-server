@@ -19,7 +19,7 @@ app.use(cors());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: { 
-        origin: ["http://localhost:8080", "https://any-chat-server.vercel.app", "https://any-chat-client.onrender.com"],
+        origin: ["http://localhost:8080", "https://any-chat-client.vercel.app", "https://any-chat-client.onrender.com"],
         methods: ["GET", "POST"],
         credentials: true
     }
