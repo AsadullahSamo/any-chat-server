@@ -130,6 +130,23 @@ io.on("connection", socket => {
             console.log("Deleted message for me is ", deleteMessage)
         }
     })
+
+    socket.on("edit-message", async (index, oldData, newData, time, active) => {
+        if(active === "allMessages") {
+            const updateMessage = await User.updateOne({message: oldData, time: time, receiver: "all"}, {message: newData});
+            socket.broadcast.emit("edit-message", index, newData, active)
+        } else {
+            const receiver = await User.find({ message: oldData, time: time })
+            const extractedReceiver = receiver[0].receiver || receiver[0].r || receiver[1].receiver || receiver[1].r || receiver.receiver || receiver.r
+            const receiverId = await User.findOne({name: extractedReceiver}, {socketId: 1, _id: 0})
+            
+            socket.to(receiverId.socketId).emit("edit-message", index, newData, active)
+            const updateMessage = await User.updateMany({ $and: [{ message: oldData, time: time }, { receiver: { $ne: "all" } }]}, {message: newData});
+            
+        }
+    })
+
+
 })
 
 // API routes
