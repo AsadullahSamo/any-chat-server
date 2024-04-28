@@ -1,11 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
 import express from "express";
-import {createServer} from 'http';
 import cors from "cors";
 import User from "./Models/userModel.js";
-import mongoose from 'mongoose'
 import fetch from 'node-fetch';
+import mongoose from 'mongoose'
 import cheerio from 'cheerio';
 import { URL } from 'url';
 import {Server} from 'socket.io'
@@ -18,12 +17,18 @@ import {upload} from './middlewares/multer.mjs'
 // Database operations
 const app = express();
 app.use(express.json());       
-app.use(cors());
+app.use(cors(
+    {
+        origin: ["http://localhost:8080", "https://any-chat-client.onrender.com", "https://any-chat-client.vercel.app"],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+));
 
-const httpServer = createServer(app);
+const httpServer = require('http').createServer(app);
 const io = new Server(httpServer, {
     cors: { 
-        origin: ["http://localhost:8080", "https://any-chat-client.vercel.app", "https://any-chat-client.onrender.com"],
+        origin: ["http://localhost:8080", "https://any-chat-client.onrender.com", "https://any-chat-server.vercel.app"],
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -33,7 +38,7 @@ mongoose.connect(`${process.env.CON_STR}`)
 .then((con) => { 
     console.log("Connected to MongoDB")
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
 }).catch(err => console.log("Error connecting to MongoDB", err.message));
@@ -45,6 +50,8 @@ const createUser = async (userObj) => {
         console.log(err.message);
     }
 }
+
+
 
 const connectedUsers = new Map()
 let myPhone;
