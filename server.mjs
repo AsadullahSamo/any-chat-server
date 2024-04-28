@@ -1,8 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
 import express from "express";
+import {createServer} from 'http';
 import cors from "cors";
 import User from "./Models/userModel.js";
+import mongoose from 'mongoose'
 import fetch from 'node-fetch';
 import cheerio from 'cheerio';
 import { URL } from 'url';
@@ -16,15 +18,16 @@ import {upload} from './middlewares/multer.mjs'
 // Database operations
 const app = express();
 app.use(express.json());       
-app.use(cors(
-    {
-        origin: ["http://localhost:8080", "https://any-chat-client.onrender.com", "https://any-chat-server.vercel.app"],
+app.use(cors());
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: { 
+        origin: ["http://localhost:8080", "https://any-chat-client.vercel.app", "https://any-chat-client.onrender.com"],
         methods: ["GET", "POST"],
         credentials: true
     }
-));
-
-import mongoose from 'mongoose'
+});
 
 mongoose.connect(`${process.env.CON_STR}`)
 .then((con) => { 
@@ -42,14 +45,6 @@ const createUser = async (userObj) => {
         console.log(err.message);
     }
 }
-
-const io = new Server(3000, {
-    cors: { 
-        origin: ["http://localhost:8080", "https://any-chat-client.onrender.com", "https://any-chat-server.vercel.app"],
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-});
 
 const connectedUsers = new Map()
 let myPhone;
