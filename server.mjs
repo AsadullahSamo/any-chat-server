@@ -165,10 +165,8 @@ io.on("connection", socket => {
             const receiver = await User.find({ message: message, time: time })
             const phone = receiver[0].receiver
             const receiverId = await User.findOne({phone: phone}, {socketId: 1, _id: 0})
-            console.log("Receiver ID is ", receiverId)
             socket.to(receiverId.socketId).emit("delete-message", index, "myMessages", message, time)
             const deletedMessage = await User.deleteMany({ $and: [{ message: message, time: time }, { receiver: { $ne: "all" } }]});
-            console.log(deletedMessage)
         }
     })
 
@@ -176,7 +174,6 @@ io.on("connection", socket => {
         if(active === "myMessages") {
             let myPhone = phone.replace("+", "")
             const deleteMessage = await User.deleteOne({message: message, time: time, $or: [{receiver: myPhone}, {sender: myPhone}]});
-            console.log("Deleted message for me is ", deleteMessage)
         }
     })
 
@@ -211,7 +208,6 @@ app.get("/users/all", async (req, res) => {
 app.get("/users/:phone", async (req, res) => {
     let phone = req.params.phone;
     phone = phone.replace("+", "")
-    console.log(`my phone number is ${phone}`)
     try {
         const users = await User.find( {$or: [{receiver: phone}, {sender: phone}]} );
         res.json(users);
@@ -277,17 +273,11 @@ app.post('/upload', upload.single("file"), async (req, res) => {
         return res.status(400).json({ error: "No file uploaded" });
     }
 
-    console.log("File details:", req.file);
-    console.log("Uploaded file:", req.file.originalname);
-    console.log("File path:", req.file.path);
-
     const url = await uploadCloudinary(req.file.path)
-    console.log("File uploaded to Cloudinary: ", url)
     fileUrl = url;
 
     res.status(200).json({ message: "File uploaded successfully" });
     const file = await User.updateMany({message: req.file.originalname}, {fileUrl: url})
-    console.log(`Database updated with fileUrl ${url}`, file)
 });
 
 app.get('/file', (req, res) => {
@@ -302,7 +292,5 @@ const __dirname = dirname(__filename);
 app.get('/uploads/:fileName', async (req, res) => {
     const file = req.params.fileName;
     const filePath = path.join(__dirname, 'uploads', file);
-    console.log("File name is ", file)
-    console.log("File path is ", filePath)
     res.download(filePath)
 })
