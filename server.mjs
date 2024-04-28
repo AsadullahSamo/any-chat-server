@@ -6,6 +6,7 @@ import User from "./Models/userModel.js";
 import fetch from 'node-fetch';
 import mongoose from 'mongoose'
 import cheerio from 'cheerio';
+import { createServer } from "http";
 import { URL } from 'url';
 import {Server} from 'socket.io'
 import { uploadCloudinary } from "./services/cloudinary.mjs";
@@ -25,7 +26,7 @@ app.use(cors(
     }
 ));
 
-const httpServer = require('http').createServer(app);
+const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: { 
         origin: ["http://localhost:8080", "https://any-chat-client.onrender.com", "https://any-chat-server.vercel.app"],
