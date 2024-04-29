@@ -52,8 +52,6 @@ const createUser = async (userObj) => {
     }
 }
 
-
-
 const connectedUsers = new Map()
 let myPhone;
 
@@ -118,17 +116,16 @@ io.on("connection", socket => {
         connectedUsers.delete(socket.id);
     }) // end of socket.on disconnect
 
-    
     socket.on("send-message-to-user", async (isFile, size, file, message, sender, time, phone, senderPhone) => {
         let myPhone = phone.replace("+", "")
         let sPhone = senderPhone.replace("+", "")
-        let receiverId = await User.findOne({phone: myPhone}, {socketId: 1, _id: 0})     
         
         let userObj = {
             name: sender,
             time: time,
             message: message,
             receiver: myPhone,
+            sender: sPhone,
             isFile: isFile,
         }   
         if(isFile) {
@@ -138,22 +135,8 @@ io.on("connection", socket => {
             userObj.message = file
         }
         createUser(userObj)
-
-        let senderObj = {
-            name: sender,
-            time: time,
-            message: message,
-            sender: sPhone,
-            isFile: isFile,
-        }
-        if(isFile) {
-            senderObj.size = size;
-            senderObj.file = file;
-            senderObj.fileUrl = 'empty';
-            senderObj.message = file
-        }
-        createUser(senderObj)
         
+        let receiverId = await User.findOne({phone: myPhone}, {socketId: 1, _id: 0})     
         socket.to(receiverId.socketId).emit("send-message-to-user", isFile, message, sender, `${new Date().toLocaleString()}`, size);        
     })   
 
@@ -162,18 +145,11 @@ io.on("connection", socket => {
             const deleteMessage = await User.deleteOne({message: message, time: time, receiver: "all"});
             socket.broadcast.emit("delete-message", index, "allMessages", message, time)
         } else {
-            const receiver = await User.find({ message: message, time: time })
-            const phone = receiver[0].receiver
-            const receiverId = await User.findOne({phone: phone}, {socketId: 1, _id: 0})
+            const receiver = await User.find({ message: message, time: time }, {receiver: 1, _id: 0})
+            const receiverId = await User.findOne({phone: receiver[0].receiver}, {socketId: 1, _id: 0})
             socket.to(receiverId.socketId).emit("delete-message", index, "myMessages", message, time)
             const deletedMessage = await User.deleteMany({ $and: [{ message: message, time: time }, { receiver: { $ne: "all" } }]});
-        }
-    })
-
-    socket.on("delete-message-for-me", async (phone, message, time, active, name) => {
-        if(active === "myMessages") {
-            let myPhone = phone.replace("+", "")
-            const deleteMessage = await User.deleteOne({message: message, time: time, $or: [{receiver: myPhone}, {sender: myPhone}]});
+            console.log(deletedMessage)
         }
     })
 
@@ -182,14 +158,20 @@ io.on("connection", socket => {
             const updateMessage = await User.updateOne({message: oldData, time: time, receiver: "all"}, {message: newData});
             socket.broadcast.emit("edit-message", index, newData, active)
         } else {
-            const receiver = await User.find({ message: oldData, time: time })
-            const phone = receiver[0].receiver
-            const receiverId = await User.findOne({phone: phone}, {socketId: 1, _id: 0})
-            
+            const receiver = await User.find({ message: oldData, time: time }, {receiver: 1, _id: 0})
+            const receiverId = await User.findOne({phone: receiver[0].receiver}, {socketId: 1, _id: 0})
             socket.to(receiverId.socketId).emit("edit-message", index, newData, active)
             const updateMessage = await User.updateMany({ $and: [{ message: oldData, time: time }, { receiver: { $ne: "all" } }]}, {message: newData});
             
         }
+    })
+
+    socket.on('user-details', async (myPhone, name, phone, myDeletedMessages) => {
+        let sPhone = myPhone.replace("+", "")
+        let rPhone = phone.replace("+", "")
+        const user = await User.find({$or: [{receiver: rPhone, sender: sPhone}, {receiver: sPhone, sender: rPhone}]} )
+        const filteredData = user.filter(message => !myDeletedMessages.some(deletedMessage =>  Array.isArray(deletedMessage) && deletedMessage.length >= 2 && deletedMessage[0] === message.message && deletedMessage[1] === message.time));
+        socket.emit('user-details', filteredData)
     })
 
 })
@@ -216,6 +198,7 @@ app.get("/users/:phone", async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
 
 app.get("/users", async (req, res) => {
     try {
@@ -278,6 +261,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
 
     res.status(200).json({ message: "File uploaded successfully" });
     const file = await User.updateMany({message: req.file.originalname}, {fileUrl: url})
+    console.log(`Database updated with fileUrl ${url}`, file)
 });
 
 app.get('/file', (req, res) => {
@@ -292,5 +276,7 @@ const __dirname = dirname(__filename);
 app.get('/uploads/:fileName', async (req, res) => {
     const file = req.params.fileName;
     const filePath = path.join(__dirname, 'uploads', file);
+    console.log("File name is ", file)
+    console.log("File path is ", filePath)
     res.download(filePath)
 })
