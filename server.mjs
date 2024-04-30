@@ -199,7 +199,6 @@ app.get("/users/:phone", async (req, res) => {
     }
 });
 
-
 app.get("/users", async (req, res) => {
     try {
         const users = Array.from(connectedUsers.values());
