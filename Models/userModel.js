@@ -33,6 +33,15 @@ const userSchema = new mongoose.Schema({        // In this schema, we can define
     },
     fileUrl: {
         type: String,
+    },
+    userID: {
+        type: String,
+    },
+    email: {
+        type: String,
+    },
+    myContacts: {
+        type: Array,
     }
 })
 
