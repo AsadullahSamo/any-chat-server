@@ -51,7 +51,7 @@ const connectedUsers = new Map()
 io.on("connection", socket => {    
 
     socket.on('user-connected', async (nickname, email, userID) => {
-        // console.log("User connected", nickname, userID)
+        console.log("User connected", nickname)
         const user = await User.find({email: email})
         let userObj;
         if (user.length === 0) {        
@@ -105,8 +105,6 @@ io.on("connection", socket => {
 
     
     socket.on("send-message-to-user", async (isFile, size, file, message, sender, time, receiverUserID, senderUserID) => {
-        // let myPhone = phone.replace("+", "")
-        // let sPhone = senderPhone.replace("+", "")
         console.log(`Sender's id is ${senderUserID} and receiver's id is ${receiverUserID}`)
         let userObj = {
             name: sender,
